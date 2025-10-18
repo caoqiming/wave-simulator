@@ -62,31 +62,10 @@ $$\frac{\partial u}{\partial x} \Big|_{i=0} \approx \frac{u_1^n - u_{-1}^n}{2 \D
 
 这个条件基于这样一个事实：在一个无限的 1 维空间中，在波速为 $c$ 的情况下，波只向一个方向传播（例如，在右边界处，波只向右传播）。
 
-#### 对于右边界 ($x=L$)
-
-向右传播的波满足 **一阶单向波方程** $\left(\frac{\partial}{\partial t} + c \frac{\partial}{\partial x}\right) A = 0$。
-因此，右边界的吸收边界条件为：
-$$\frac{\partial A}{\partial t} + c \frac{\partial A}{\partial x} = 0 \quad \text{在 } x=L$$
-
-差分近似
-
-$$\frac{\partial u}{\partial t} \approx \frac{A_N^{n+1} - A_N^n}{\Delta t}$$
-
-$$\frac{\partial u}{\partial x} \approx \frac{A_N^n - A_{N-1}^n}{\Delta x}$$
-
-将以上近似代入边界条件
-$$\frac{A_N^{n+1} - A_N^n}{\Delta t} + c \frac{A_N^n - A_{N-1}^n}{\Delta x} = 0$$
-
-求解 $A_N^{n+1}$（下一个时间步的边界值）：
-$$A_N^{n+1} = A_N^n - c \frac{\Delta t}{\Delta x} (A_N^n - A_{N-1}^n)$$
-
-$$A_N^{n+1} = A_N^n - C (A_N^n - A_{N-1}^n)$$
-
-$$A_N^{n+1} = (1 - C) A_N^n + C A_{N-1}^n$$
-
-#### 对于左边界 ($x=0$)
+对于左边界 ($x=0$)
 
 向左传播的波满足 $\left(\frac{\partial}{\partial t} - c \frac{\partial}{\partial x}\right) A = 0$。
+
 因此，左边界的吸收边界条件为：
 $$\frac{\partial A}{\partial t} - c \frac{\partial A}{\partial x} = 0 \quad \text{在 } x=0$$
 差分形式

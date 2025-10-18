@@ -1,11 +1,11 @@
 import numpy as np
 import abc
-from typing import Callable
+from typing import Callable, Any
 
 
 class BoundaryCondition(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def apply(self, A_0: np.float64, A_1: np.float64, **kwargs: any) -> np.float64:
+    def apply(self, A_0: np.float64, A_1: np.float64, **kwargs: Any) -> np.float64:
         """
         以左边界为例，输入上一时刻的 A_0, A_1，输出下一时刻的 A_0
         """
@@ -21,7 +21,7 @@ class FixedBoundary(BoundaryCondition):
         super().__init__()
         self.value = value
 
-    def apply(self, A_0: np.float64, A_1: np.float64, **kwargs: any) -> np.float64:
+    def apply(self, A_0: np.float64, A_1: np.float64, **kwargs: Any) -> np.float64:
         return self.value
 
 
@@ -47,12 +47,12 @@ class UnlimitedBoundary(BoundaryCondition):
     无限制边界
     """
 
-    def apply(self, A_0: np.float64, A_1: np.float64, **kwargs: any) -> np.float64:
+    def apply(self, u_0: np.float64, u_1: np.float64, **kwargs: any) -> np.float64:
         C = kwargs.get("C")
-        if not C:
+        if C is None:
             raise ValueError("C is not set")
 
-        return (1-C)*A_0+C*A_1
+        return (1-C)*u_0+C*u_1
 
 
 class OneDimensionSimulator:
@@ -133,25 +133,25 @@ class OneDimensionSimulator:
         """
         # 用于储存结果
         self.result = np.zeros((self.N+1, self.N_t+1), np.float64)
-        # 初始化介质中的波速
-        c = np.zeros(self.N+1, np.float64)
-        for i in range(0, self.N+1):
-            c[i] = self.wave_speed(self.X[i])
-        # c2 为 c 的平方
-        c2 = c**2
 
         # 用于储存当前 i-1,i,i+1 时刻的波形
         A_last = np.zeros(self.N+1, np.float64)
         A_current = np.zeros(self.N+1, np.float64)
         A_next = np.zeros(self.N+1, np.float64)
+        # 介质波速
+        c = np.zeros(self.N+1, np.float64)
+        # 质点初始速度
+        initial_v = np.zeros(self.N+1, np.float64)
+        for i in range(0, self.N+1):
+            c[i] = self.wave_speed(self.X[i])
+            A_last[i] = self.initial_wave(self.X[i])
+            initial_v[i] = self.initial_point_speed(self.X[i])
+        # c2 为 c 的平方
+        c2 = c**2
 
         # 仿真需要用 A_last 和 A_current 递推 A_next，所以我们从 t=1 开始仿真
         # 用 t=0 和 t=1 的初始条件，填充 A_last 和 A_current
-        # t = 0 初始条件直接获得
-        A_last[:] = self.initial_wave(self.X[:])
-        # t = 1 的位置根据初速度与加速度估算
-        initial_v = np.zeros(self.N+1, np.float64)
-        initial_v[:] = self.initial_point_speed(self.X[:])
+
         initial_a = np.zeros(self.N+1, np.float64)
         # 为了执行效率这里不直接遍历所有的n，而是直接对numpy的array进行操作。可读性较差但没办法，python就是这么垃圾。
         # 所有的点为 0,...,N 能计算的非边界的点为 1,...,N-1
@@ -169,6 +169,7 @@ class OneDimensionSimulator:
         A_i = A_last[1:self.N]
         A_i_add_1 = A_last[2:self.N+1]
         # 计算初始加速度
+        initial_a = np.zeros(self.N+1, np.float64)
         initial_a[1:self.N] = 1/self.dx**2 * (
             0.5*(c2_i_add_1 + c2_i)*(A_i_add_1-A_i)
             - 0.5*(c2_i+c2_i_sub_1)*(A_i-A_i_sub_1))
@@ -224,15 +225,18 @@ class OneDimensionSimulator:
 
 if __name__ == "__main__":
     s = OneDimensionSimulator()
-    s.set_space_range(3, 0.01)
-    s.set_initial_wave(lambda x: np.where(x < 2, x, 6-2*x))
+    # s.set_space_range(3, 0.01)
+    # s.set_initial_wave(lambda x: np.where(x < 2, x, 6-2*x))
+    s.set_initial_wave(lambda x: np.where(x < np.pi/4, 3*np.sin(8*x), 0))
+    s.set_initial_point_speed(
+        lambda x: np.where(x < np.pi/4, -24*np.cos(8*x), 0))
 
-    # s.set_right_boundary(NeumannBoundary())
-    # s.set_right_boundary(UnlimitedBoundary())
+    s.set_left_boundary(UnlimitedBoundary())
+    s.set_right_boundary(UnlimitedBoundary())
     s.simulate()
     print(s.result)
     import matplotlib.pyplot as plt
     import viz_tools  # self-developed module that groups animation functions
-    anim1 = viz_tools.anim_1D(s.X, s.result, s.dt, 30, save=False,
+    anim1 = viz_tools.anim_1D(s.X, s.result, s.dt, 10, save=False,
                               myxlim=(0, s.L_x))
     plt.show()
