@@ -32,13 +32,21 @@ $$\frac{\partial^2 u}{\partial t^2} = c^2(x, y) \left( \frac{\partial^2 u}{\part
 我们使用二阶中心差分来近似所有二阶偏导数：
 
 1.  **时间二阶导数**：
-    $$\frac{\partial^2 u}{\partial t^2} \approx \frac{u_{i, j}^{k+1} - 2 u_{i, j}^{k} + u_{i, j}^{k-1}}{(\Delta t)^2}$$
+
+    $$
+    \frac{\partial^2 u}{\partial t^2} \approx \frac{u_{i, j}^{k+1} - 2 u_{i, j}^{k} + u_{i, j}^{k-1}}{(\Delta t)^2}
+    $$
 
 2.  **空间二阶导数（x 方向）**：
-    $$\frac{\partial^2 u}{\partial x^2} \approx \frac{u_{i+1, j}^{k} - 2 u_{i, j}^{k} + u_{i-1, j}^{k}}{(\Delta x)^2}$$
+
+    $$
+    \frac{\partial^2 u}{\partial x^2} \approx \frac{u_{i+1, j}^{k} - 2 u_{i, j}^{k} + u_{i-1, j}^{k}}{(\Delta x)^2}
+    $$
 
 3.  **空间二阶导数（y 方向）**：
-    $$\frac{\partial^2 u}{\partial y^2} \approx \frac{u_{i, j+1}^{k} - 2 u_{i, j}^{k} + u_{i, j-1}^{k}}{(\Delta y)^2}$$
+    $$
+    \frac{\partial^2 u}{\partial y^2} \approx \frac{u_{i, j+1}^{k} - 2 u_{i, j}^{k} + u_{i, j-1}^{k}}{(\Delta y)^2}
+    $$
 
 $$
 \frac{u_{i, j}^{k+1} - 2 u_{i, j}^{k} + u_{i, j}^{k-1}}{(\Delta t)^2} = c_{i, j}^2 \left[ \frac{u_{i+1, j}^{k} - 2 u_{i, j}^{k} + u_{i-1, j}^{k}}{h^2} + \frac{u_{i, j+1}^{k} - 2 u_{i, j}^{k} + u_{i, j-1}^{k}}{h^2} \right]
