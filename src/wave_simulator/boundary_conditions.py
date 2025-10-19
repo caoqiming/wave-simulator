@@ -86,14 +86,16 @@ class UnlimitedBoundary(BoundaryCondition):
     Unlimited Boundary
     """
 
-    def apply(self, u_0: np.float64, u_1: np.float64, **kwargs: any) -> np.float64:
+    def apply(self, u_0: np.float64, u_1: np.float64,
+              **kwargs: any) -> np.float64:
         C = kwargs.get("C")
         if C is None:
             raise ValueError("C is not set")
 
         return (1-C)*u_0+C*u_1
 
-    def apply2D(self, u_0_j: np.typing.NDArray, u_1_j: np.typing.NDArray, **kwargs: Any) -> np.typing.NDArray:
+    def apply2D(self, u_0_j: np.typing.NDArray, u_1_j: np.typing.NDArray,
+                **kwargs: Any) -> np.typing.NDArray:
         C = kwargs.get("C")
         if C is None:
             raise ValueError("C is not set")
