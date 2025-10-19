@@ -7,21 +7,21 @@ class BoundaryCondition(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def apply(self, u_0: np.float64, u_1: np.float64, **kwargs: Any) -> np.float64:
         """
-        以左边界为例，输入上一时刻的 u_0, u_1，输出下一时刻的 u_0
+        Taking the left boundary as an example, input u_0 and u_1 from the previous time step, output u_0 for the next time step.
         """
         raise RuntimeError("not implemented")
 
     @abc.abstractmethod
     def apply2D(self, u_0_j: np.typing.NDArray, u_1_j: np.typing.NDArray, **kwargs: Any) -> np.typing.NDArray:
         """
-        以左边界为例，输入上一时刻的 u_0_j, u_1_j，输出下一时刻的 u_0_j
+        Taking the left boundary as an example, input u_0_j and u_1_j from the previous time step, output u_0_j for the next time step.
         """
         raise RuntimeError("not implemented")
 
 
 class FixedBoundary(BoundaryCondition):
     """
-    固定边界
+    Fixed Boundary
     """
 
     def __init__(self, value=np.float64(0)):
@@ -37,7 +37,7 @@ class FixedBoundary(BoundaryCondition):
 
 class NeumannBoundary(BoundaryCondition):
     """
-    边界点的位移梯度（斜率）为零（例如，一根绳子的末端系在一个可以在杆上自由滑动的环上）。
+    The displacement gradient (slope) at the boundary point is zero (e.g., the end of a string is tied to a ring that can slide freely on a rod).
     """
 
     def apply(self, u_0: np.float64, u_1: np.float64, **kwargs: any) -> np.float64:
@@ -62,11 +62,11 @@ class NeumannBoundary(BoundaryCondition):
         u_0_ja1 = u_0_j[2:N+1]
         u_0_js1 = u_0_j[0:N-1]
         u_0_j_next = np.zeros(u_0_j.shape, dtype=np.float64)
-        # 先处理中间的点
+        # Process the intermediate points first
         u_0_j_next[1:N] = 2*u_0_j[1:N] - u_0_j_last[1:N] + C2[1:N] * \
             (u_1_j[1:N]*2 + u_0_ja1 + u_0_js1 - 4*u_0_j[1:N])
-        # 角落的点不知道怎么处理，角落的点属于两个边，脑瓜疼
-        # 就先假定它属于的另一条边也是同样的 NeumannBoundary 吧，具体实现的时后面的优先级更高。
+        # Unsure how to handle the corner points. Corner points belong to two edges, which is a headache.
+        # For now, let's assume the other edge it belongs to is also a NeumannBoundary; the latter one will have higher priority during actual implementation.
         u_0_j_next[0] = 2*u_0_j[0] - u_0_j_last[0] + C2[0] * \
             (u_1_j[0]*2 + 2*u_0_j[1] - 4*u_0_j[0])
         u_0_j_next[N] = 2*u_0_j[N] - u_0_j_last[N] + C2[N] * \
@@ -76,7 +76,7 @@ class NeumannBoundary(BoundaryCondition):
 
 class UnlimitedBoundary(BoundaryCondition):
     """
-    无限制边界
+    Unlimited Boundary
     """
 
     def apply(self, u_0: np.float64, u_1: np.float64, **kwargs: any) -> np.float64:

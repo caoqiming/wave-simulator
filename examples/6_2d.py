@@ -18,5 +18,4 @@ s.set_initial_wave(my_initial_wave)
 s.set_wave_speed(my_wave_speed)
 s.set_all_boundary(UnlimitedBoundary())
 s.simulate()
-s.animate_result_flat(
-    save_path="/Users/glimmer/Documents/study/mathematics_of_light_and_sound/wave-simulation/output/10.mp4")
+s.animate_result_flat()

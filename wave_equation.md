@@ -1,60 +1,60 @@
-### 连续形式的非均匀介质波动方程（一维）
+### Continuous Form of the Wave Equation in Non-Uniform Media (1D)
 
-我们使用的连续形式是：
+The continuous form we use is:
 $$\frac{\partial^2 A}{\partial t^2} = \frac{\partial}{\partial x} \left[ c^2(x) \frac{\partial A}{\partial x} \right]$$
 
-其中 $A$ 是波场，$c(x)$ 是随位置变化的波速。
+Where $A$ is the wave field and $c(x)$ is the wave speed that varies with position.
 
-### 有限差分近似
+### Finite Difference Approximation
 
-我们采用标准符号：
+We adopt standard notation:
 
-- $A_{i}^{j}$: 波场在空间点 $x_i$、时间 $t_j$ 的值。
-- $c_{i}$: 波速在空间点 $x_i$ 的值（随位置变化，不随时间变化）。
-- $\Delta t$: 时间步长。
-- $\Delta x$: 空间步长。
+- $A_{i}^{j}$: The value of the wave field at spatial point $x_i$ and time $t_j$.
+- $c_{i}$: The value of the wave speed at spatial point $x_i$ (varies with position, constant in time).
+- $\Delta t$: The time step size.
+- $\Delta x$: The spatial step size.
 
-#### 1. 时间二阶导数 $\frac{\partial^2 A}{\partial t^2}$ 的近似
+#### 1. Approximation of the Second-order Time Derivative $\frac{\partial^2 A}{\partial t^2}$
 
-使用中心差分：
+Using central difference:
 $$\frac{\partial^2 A}{\partial t^2} \approx \frac{A_{i}^{j+1} - 2A_{i}^{j} + A_{i}^{j-1}}{\Delta t^2}$$
 
-#### 2. 空间项 $\frac{\partial}{\partial x} \left[ c^2(x) \frac{\partial A}{\partial x} \right]$ 的近似
+#### 2. Approximation of the Spatial Term $\frac{\partial}{\partial x} \left[ c^2(x) \frac{\partial A}{\partial x} \right]$
 
-对包含 $c^2(x)$ 的项，我们使用两步中心差分来近似：
+For the term containing $c^2(x)$, we use a two-step central difference to approximate it:
 
-**第一步：近似中括号内的 $\left[ c^2(x) \frac{\partial A}{\partial x} \right]$**
+**Step 1: Approximate the term inside the brackets $\left[ c^2(x) \frac{\partial A}{\partial x} \right]$**
 
-我们首先需要定义 **$c^2(x) \frac{\partial A}{\partial x}$ 在半网格点 $x_{i+1/2}$ 处的值**。
+We first need to define the value of **$c^2(x) \frac{\partial A}{\partial x}$ at the half-grid point $x_{i+1/2}$**.
 
-在 $x_{i+1/2}$ 处：
+At $x_{i+1/2}$:
 $$\left[ c^2 \frac{\partial A}{\partial x} \right]_{i+1/2}^{j} \approx (c^2)_{i+1/2} \frac{A_{i+1}^{j} - A_{i}^{j}}{\Delta x}$$
 
-为了计算 $(c^2)_{i+1/2}$，通常使用相邻网格点 $c_{i}$ 和 $c_{i+1}$ 的**平均值**（或简单地使用它们平方的平均）：
+To calculate $(c^2)_{i+1/2}$, the **average** of the adjacent grid points $c_{i}$ and $c_{i+1}$ is typically used (or simply the average of their squares):
 $$(c^2)_{i+1/2} \approx \frac{c_{i+1}^2 + c_{i}^2}{2}$$
 
-因此，第一步近似为：
+Thus, the first-step approximation is:
 $$F_{i+1/2}^j = \frac{c_{i+1}^2 + c_{i}^2}{2} \frac{A_{i+1}^{j} - A_{i}^{j}}{\Delta x}$$
 
-**第二步：近似外面的 $\frac{\partial}{\partial x}$**
+**Step 2: Approximate the outer $\frac{\partial}{\partial x}$**
 
-现在，我们对第一步得到的结果（可以看作一个通量 $F$）使用中心差分：
+Now, we apply central difference to the result from Step 1 (which can be viewed as a flux $F$):
 $$\frac{\partial}{\partial x} \left[ c^2 \frac{\partial A}{\partial x} \right] \approx \frac{F_{i+1/2}^j - F_{i-1/2}^j}{\Delta x}$$
 
-其中 $F_{i-1/2}^j$ 为：
+Where $F_{i-1/2}^j$ is:
 $$F_{i-1/2}^j = \frac{c_{i}^2 + c_{i-1}^2}{2} \frac{A_{i}^{j} - A_{i-1}^{j}}{\Delta x}$$
 
-将 $F_{i+1/2}^j$ 和 $F_{i-1/2}^j$ 代入，得到空间项的最终近似：
+Substituting $F_{i+1/2}^j$ and $F_{i-1/2}^j$, we get the final approximation for the spatial term:
 $$\frac{\partial}{\partial x} \left[ c^2 \frac{\partial A}{\partial x} \right] \approx \frac{1}{\Delta x^2} \left[ \frac{c_{i+1}^2 + c_{i}^2}{2} (A_{i+1}^{j} - A_{i}^{j}) - \frac{c_{i}^2 + c_{i-1}^2}{2} (A_{i}^{j} - A_{i-1}^{j}) \right]$$
 
-### 3. 完整的有限差分方程 (FDM Formula)
+### 3. Complete Finite Difference Equation (FDM Formula)
 
-将时间近似和空间近似代入连续方程 $\frac{\partial^2 A}{\partial t^2} = \frac{\partial}{\partial x} \left[ c^2 \frac{\partial A}{\partial x} \right]$：
+Substituting the time and spatial approximations into the continuous equation $\frac{\partial^2 A}{\partial t^2} = \frac{\partial}{\partial x} \left[ c^2 \frac{\partial A}{\partial x} \right]$:
 
 $$\frac{A_{i}^{j+1} - 2A_{i}^{j} + A_{i}^{j-1}}{\Delta t^2} = \frac{1}{\Delta x^2} \left[ \frac{c_{i+1}^2 + c_{i}^2}{2} (A_{i+1}^{j} - A_{i}^{j}) - \frac{c_{i}^2 + c_{i-1}^2}{2} (A_{i}^{j} - A_{i-1}^{j}) \right]$$
 
-**求解 $A_{i}^{j+1}$（时间步进形式）：**
+**Solving for $A_{i}^{j+1}$ (Time-marching form):**
 
-令 $\lambda = \left(\frac{\Delta t}{\Delta x}\right)^2$，整理得到最终的显式有限差分公式：
+Let $\lambda = \left(\frac{\Delta t}{\Delta x}\right)^2$. Rearranging gives the final explicit Finite Difference Method formula:
 
 $$A_{i}^{j+1} = 2A_{i}^{j} - A_{i}^{j-1} + \frac{\lambda}{2} \left[ (c_{i+1}^2 + c_{i}^2) (A_{i+1}^{j} - A_{i}^{j}) - (c_{i}^2 + c_{i-1}^2) (A_{i}^{j} - A_{i-1}^{j}) \right]$$

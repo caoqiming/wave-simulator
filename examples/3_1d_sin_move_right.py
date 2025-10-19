@@ -18,6 +18,4 @@ s = OneDimensionSimulator()
 s.set_initial_wave(my_initial_wave)
 s.set_initial_point_speed(my_initial_speed)
 s.simulate()
-s.animate_result_1D(ylim=(-4, 4), down_sampling_rate=20,
-                    save_path="/Users/glimmer/Documents/study/mathematics_of_light_and_sound/wave-simulation/output/7.mp4"
-                    )
+s.animate_result_1D(ylim=(-4, 4), down_sampling_rate=20)

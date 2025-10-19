@@ -1,19 +1,6 @@
-# wave simulation
+# 一维波仿真
 
-## 波动方程
-
-### 均匀介质中的波动方程
-
-**微分方程形式:**
-$$\frac{\partial^2 A(x, t)}{\partial t^2} = c^2 \frac{\partial^2 A(x, t)}{\partial x^2}$$
-
-**有限差分形式 (使用 $x_j, t_i$ 符号):**
-$$\frac{A(x_j, t_{i+1}) - 2A(x_j, t_i) + A(x_j, t_{i-1})}{\Delta t^2} \approx c^2 \frac{A(x_{j+1}, t_i) - 2A(x_j, t_i) + A(x_{j-1}, t_i)}{\Delta x^2}$$
-
-**有限差分形式 (使用 $a_j^i$ 符号):**
-$$\frac{a_j^{i+1} - 2a_j^i + a_j^{i-1}}{\Delta t^2} \approx c^2 \frac{a_{j+1}^i - 2a_j^i + a_{j-1}^i}{\Delta x^2}$$
-
-### 非均匀介质中的波动方程
+## 非均匀介质中的波动方程
 
 在非均匀介质中，波速 $c$ 不再是一个常数，而是位置的函数 $c(\mathbf{x})$。标准的波动方程中的 $c^2$ 项不能直接移到偏导数外面。
 
@@ -42,10 +29,9 @@ $$\frac{a_j^{i+1} - a_j^{i-1}}{2\Delta t} \approx u$$
 
 ## 边界条件
 
-利用前文得到的递推关系，只能处理中间的点，即处理的点的左右两侧都必须有其他的点。
-对于位于边界处的点，比如在最左侧的点，它的左侧没有其他点了，无法进行正常迭代，要如何进行仿真？
+### 固定边界
 
-这三个边界条件是偏微分方程（Partial Differential Equations, PDE）求解中常见的类型：
+最简单的边界条件，默认固定为 0
 
 ### 自由端边界 (Neumann Boundary Condition)
 

@@ -1,4 +1,4 @@
-# 2d simulator
+# 二维波仿真
 
 ## 波动方程
 
@@ -40,4 +40,6 @@ $$\frac{\partial^2 u}{\partial t^2} = c^2(x, y) \left( \frac{\partial^2 u}{\part
 3.  **空间二阶导数（y 方向）**：
     $$\frac{\partial^2 u}{\partial y^2} \approx \frac{u_{i, j+1}^{k} - 2 u_{i, j}^{k} + u_{i, j-1}^{k}}{(\Delta y)^2}$$
 
-$$\frac{u_{i, j}^{k+1} - 2 u_{i, j}^{k} + u_{i, j}^{k-1}}{(\Delta t)^2} = c_{i, j}^2 \left[ \frac{u_{i+1, j}^{k} - 2 u_{i, j}^{k} + u_{i-1, j}^{k}}{h^2} + \frac{u_{i, j+1}^{k} - 2 u_{i, j}^{k} + u_{i, j-1}^{k}}{h^2} \right]$$
+$$
+\frac{u_{i, j}^{k+1} - 2 u_{i, j}^{k} + u_{i, j}^{k-1}}{(\Delta t)^2} = c_{i, j}^2 \left[ \frac{u_{i+1, j}^{k} - 2 u_{i, j}^{k} + u_{i-1, j}^{k}}{h^2} + \frac{u_{i, j+1}^{k} - 2 u_{i, j}^{k} + u_{i, j-1}^{k}}{h^2} \right]
+$$

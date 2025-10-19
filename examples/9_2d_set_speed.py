@@ -11,5 +11,3 @@ def my_initial_speed(x, y):
 s.set_initial_point_speed(my_initial_speed)
 s.simulate()
 s.animate_result_3D()
-# you can also show result in flat
-# s.animate_result_flat()

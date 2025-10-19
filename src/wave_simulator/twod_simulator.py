@@ -6,36 +6,37 @@ from wave_simulator.animation_utils import animate_result_flat, animate_result_3
 
 class TwoDimensionSimulator:
     def __init__(self):
-        # 空间
-        self.L_x = 5  # 仿真的距离范围，从 0 到 L_x
-        self.dx = 0.05  # 仿真的最小距离间隔
-        self.N_x = int(self.L_x/self.dx)  # 仿真的线段的个数
+        # Space
+        self.L_x = 5  # Simulation distance range, from 0 to L_x
+        self.dx = 0.05  # Minimum distance interval for simulation
+        # Number of segments for the simulation in x
+        self.N_x = int(self.L_x/self.dx)
         self.X = np.linspace(0, self.L_x, self.N_x+1,
-                             dtype=np.float64)  # 仿真的空间范围
+                             dtype=np.float64)  # Simulation spatial range in x
 
         self.L_y = 5
-        self.dy = self.dx  # 强制dy=dx
+        self.dy = self.dx  # Enforce dy=dx
         self.N_y = int(self.L_y/self.dy)
         self.Y = np.linspace(0, self.L_y, self.N_y+1,
                              dtype=np.float64)
 
-        # 时间
+        # Time
         self.L_t = 8  # Duration of simulation [s]
-        self.dt = 0.005  # 时间间隔
-        self.N_t = int(self.L_t/self.dt)  # 时间段的个数
-        self.T = np.linspace(0, self.L_t, self.N_t+1)  # 时间范围
+        self.dt = 0.005  # Time interval
+        self.N_t = int(self.L_t/self.dt)  # Number of time steps
+        self.T = np.linspace(0, self.L_t, self.N_t+1)  # Time range
 
-        # 边界条件
+        # Boundary conditions
         self.left_boundary = NeumannBoundary()
         self.right_boundary = NeumannBoundary()
         self.up_boundary = NeumannBoundary()
         self.down_boundary = NeumannBoundary()
 
-        # 初始波形，默认全为 0
+        # Initial waveform, default is all 0
         self.initial_wave = lambda x, y: 0.0
-        # 每个质点的初始速度，默认为 0
+        # Initial speed of each particle, default is 0
         self.initial_point_speed = lambda x, y: 0.0
-        # 介质波速，默认为 1
+        # Medium wave speed, default is 1
         self.wave_speed = lambda x, y: 1.0
 
     def set_simulation_range(self, L_x, L_y, dx, L_t, dt):
@@ -55,25 +56,26 @@ class TwoDimensionSimulator:
         self.T = np.linspace(0, self.L_t, self.N_t+1)
 
     def set_space_range(self, L_x, dx):
-        self.L_x = L_x  # 仿真的距离范围，从 0 到 L_x
-        self.dx = dx  # 仿真的最小距离间隔
-        self.N_x = int(self.L_x/self.dx)  # 仿真的线段的个数
+        self.L_x = L_x  # Simulation distance range, from 0 to L_x
+        self.dx = dx  # Minimum distance interval for simulation
+        # Number of segments for the simulation in x
+        self.N_x = int(self.L_x/self.dx)
         self.X = np.linspace(0, self.L_x, self.N_x+1,
-                             dtype=np.float64)  # 仿真的空间范围
+                             dtype=np.float64)  # Simulation spatial range in x
 
     def set_time_range(self, L_t, dt):
-        # 时间
+        # Time
         self.L_t = L_t  # Duration of simulation [s]
-        self.dt = dt  # 时间间隔
-        self.N_t = int(self.L_t/self.dt)  # 时间段的个数
-        self.T = np.linspace(0, self.L_t, self.N_t+1)  # 时间范围
+        self.dt = dt  # Time interval
+        self.N_t = int(self.L_t/self.dt)  # Number of time steps
+        self.T = np.linspace(0, self.L_t, self.N_t+1)  # Time range
 
     def set_initial_wave(
         self,
         initial_wave: Callable[[np.float64, np.float64], np.float64],
     ):
         """
-        设置初始波形。用一个函数表示，输入空间的横坐标x，返回对应位置的波函数值
+        Sets the initial waveform. Represented by a function that takes the spatial x-coordinate and y-coordinate as input and returns the wave function value at that position.
         """
         self.initial_wave = initial_wave
 
@@ -82,7 +84,7 @@ class TwoDimensionSimulator:
         initial_point_speed: Callable[[np.float64, np.float64], np.float64],
     ):
         """
-        设置每个质点的初始速度。用一个函数表示，输入空间的横坐标 x 和纵坐标 y，返回对应位置质点的初始速度
+        Sets the initial speed of each particle. Represented by a function that takes the spatial x-coordinate and y-coordinate as input and returns the initial speed of the particle at that position.
         """
         self.initial_point_speed = initial_point_speed
 
@@ -91,7 +93,7 @@ class TwoDimensionSimulator:
         wave_speed: Callable[[np.float64, np.float64], np.float64],
     ):
         """
-        设置介质中的波速。用一个函数表示，输入空间的横坐标 x 和纵坐标 y，返回对应位置介质中的波速。
+        Sets the wave speed in the medium. Represented by a function that takes the spatial x-coordinate and y-coordinate as input and returns the wave speed in the medium at that position.
         """
         self.wave_speed = wave_speed
 
@@ -115,31 +117,31 @@ class TwoDimensionSimulator:
 
     def simulate(self):
         """
-        开始仿真
+        Starts the simulation
         """
-        # 用于储存结果
+        # Used to store the result
         self.result = np.zeros(
             (self.N_x+1, self.N_y+1, self.N_t+1), np.float64)
 
-        # 用于储存当前 i-1,i,i+1 时刻的波形
+        # Used to store the waveform at the current time steps i-1, i, i+1
         u_last = np.zeros((self.N_x+1, self.N_y+1), np.float64)
         u_current = np.zeros((self.N_x+1, self.N_y+1), np.float64)
         u_next = np.zeros((self.N_x+1, self.N_y+1), np.float64)
 
-        # 初始化
+        # Initialization
         c = np.zeros((self.N_x+1, self.N_y+1), np.float64)
         initial_v = np.zeros((self.N_x+1, self.N_y+1), np.float64)
         for i in range(0, self.N_x+1):
             for j in range(0, self.N_y+1):
-                # 介质中的波速
+                # Medium wave speed
                 c[i, j] = self.wave_speed(self.X[i], self.Y[j])
-                # 初始波形
+                # Initial waveform
                 u_last[i, j] = self.initial_wave(self.X[i], self.Y[j])
-                # 初始质点速度
+                # Initial particle speed
                 initial_v[i, j] = self.initial_point_speed(
                     self.X[i], self.Y[j])
 
-        # 定义一些常数避免重复计算
+        # Define some constants to avoid repeated calculations
         c2 = c**2
         C = c*self.dt/self.dx
         C2 = C**2
@@ -149,8 +151,8 @@ class TwoDimensionSimulator:
             raise ValueError(
                 "CFL check failed, you should reduce dt, wave speed or increase dx")
 
-        # 对于二维的仿真，我们用 i 表示 空间x 的索引，j 表示 空间y 的索引
-        # 那么 i,j 位置为 [1:self.N_x,1:self.N_y]
+        # For 2D simulation, we use i to represent the x spatial index and j for the y spatial index.
+        # The position i,j is [1:self.N_x,1:self.N_y]
         # i+1,j [2:self.N_x+1,1:self.N_y]
         # i-1,j [0:self.N_x-1,1:self.N_y]
         # i,j+1 [1:self.N_x,2:self.N_y+1]
@@ -163,16 +165,16 @@ class TwoDimensionSimulator:
         u_i_js1 = u_last[1:self.N_x, 0:self.N_y-1]
         c2_i_j = c2[1:self.N_x, 1:self.N_y]
 
-        # 计算初始加速度
+        # Calculate initial acceleration
         initial_a = np.zeros((self.N_x+1, self.N_y+1), np.float64)
         initial_a[1:self.N_x, 1:self.N_y] = c2_i_j/self.dx**2 * (
             u_ip1_j + u_is1_j + u_i_ja1 + u_i_js1 - 4*u_i_j
         )
-        # 计算 t=1 时刻的波形
+        # Calculate the waveform at t=1
         u_current[1:self.N_x, 1:self.N_y] = u_i_j + \
             initial_v[1:self.N_x, 1:self.N_y] * self.dt +\
             0.5*initial_a[1:self.N_x, 1:self.N_y]*self.dt**2
-        # 应用边界条件
+        # Apply boundary conditions
         # left i=0
         u_current[0, :] = self.left_boundary.apply2D(
             u_last[0, :], u_last[1, :],
@@ -205,7 +207,7 @@ class TwoDimensionSimulator:
         self.result[:, :, 0] = u_last.copy()
         self.result[:, :, 1] = u_current.copy()
         for i in range(1, self.N_t):
-            # 计算非边界的点 1,...,N-1
+            # Calculate non-boundary points 1,...,N-1
             # i,j   [1:self.N_x,1:self.N_y]
             # i+1,j [2:self.N_x+1,1:self.N_y]
             # i-1,j [0:self.N_x-1,1:self.N_y]
@@ -224,7 +226,7 @@ class TwoDimensionSimulator:
             )
 
             u_next[1:self.N_x, 1:self.N_y] = u_next_i_j
-            # 计算边界的点
+            # Calculate boundary points
             # left i=0
             u_next[0, :] = self.left_boundary.apply2D(
                 u_current[0, :], u_current[1, :],
