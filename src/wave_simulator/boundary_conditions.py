@@ -7,14 +7,18 @@ class BoundaryCondition(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def apply(self, u_0: np.float64, u_1: np.float64, **kwargs: Any) -> np.float64:
         """
-        Taking the left boundary as an example, input u_0 and u_1 from the previous time step, output u_0 for the next time step.
+        Taking the left boundary as an example, 
+        input u_0 and u_1 from the previous time step, 
+        output u_0 for the next time step.
         """
         raise RuntimeError("not implemented")
 
     @abc.abstractmethod
     def apply2D(self, u_0_j: np.typing.NDArray, u_1_j: np.typing.NDArray, **kwargs: Any) -> np.typing.NDArray:
         """
-        Taking the left boundary as an example, input u_0_j and u_1_j from the previous time step, output u_0_j for the next time step.
+        Taking the left boundary as an example, 
+        input u_0_j and u_1_j from the previous time step, 
+        output u_0_j for the next time step.
         """
         raise RuntimeError("not implemented")
 
@@ -31,13 +35,15 @@ class FixedBoundary(BoundaryCondition):
     def apply(self, u_0: np.float64, u_1: np.float64, **kwargs: Any) -> np.float64:
         return self.value
 
-    def apply2D(self, u_0_j: np.typing.NDArray, u_1_j: np.typing.NDArray, **kwargs: Any) -> np.typing.NDArray:
+    def apply2D(self, u_0_j: np.typing.NDArray, u_1_j: np.typing.NDArray,
+                **kwargs: Any) -> np.typing.NDArray:
         return np.full(u_0_j.shape, self.value, dtype=np.float64)
 
 
 class NeumannBoundary(BoundaryCondition):
     """
-    The displacement gradient (slope) at the boundary point is zero (e.g., the end of a string is tied to a ring that can slide freely on a rod).
+    The displacement gradient (slope) at the boundary point is zero 
+    (e.g., the end of a string is tied to a ring that can slide freely on a rod).
     """
 
     def apply(self, u_0: np.float64, u_1: np.float64, **kwargs: any) -> np.float64:
@@ -51,7 +57,8 @@ class NeumannBoundary(BoundaryCondition):
 
         return 2*u_0 - u_0_last + C**2*(u_1-u_0)
 
-    def apply2D(self, u_0_j: np.typing.NDArray, u_1_j: np.typing.NDArray, **kwargs: Any) -> np.typing.NDArray:
+    def apply2D(self, u_0_j: np.typing.NDArray, u_1_j: np.typing.NDArray,
+                **kwargs: Any) -> np.typing.NDArray:
         C2 = kwargs.get("C2")
         if C2 is None:
             raise ValueError("C2 is not set")

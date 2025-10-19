@@ -161,9 +161,6 @@ class OneDimensionSimulator:
         self.result[:, 1] = u_current.copy()
         for i in range(1, self.N_t):
             # Calculate non-boundary points 1,...,N-1
-            # The indices for the list representing position i-1 are 0,...,N-2, which is [0:N-1] using slicing.
-            # The indices for the list representing position i are 1,...,N-1, which is [1:N] using slicing.
-            # The indices for the list representing position i+1 are 2,...,N, which is [2:N+1] using slicing.
             u_current_i_sub_1 = u_current[0:self.N-1]
             u_current_i = u_current[1:self.N]
             u_current_i_add_1 = u_current[2:self.N+1]

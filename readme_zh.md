@@ -2,14 +2,6 @@
 
 该项目用于波的仿真。
 
-<video width="320" height="240" controls>
-  <source src="./output/1.mp4" type="video/mp4">
-</video>
-
-<video width="320" height="240" controls>
-  <source src="./output/7.mp4" type="video/mp4">
-</video>
-
 > 请勿将该项目用于学习以外的任何目的，因为作者不保证其严谨性
 
 ## 安装

@@ -4,14 +4,6 @@
 
 This project is for wave simulation.
 
-<video width="320" height="240" controls>
-  <source src="./output/1.mp4" type="video/mp4">
-</video>
-
-<video width="320" height="240" controls>
-  <source src="./output/7.mp4" type="video/mp4">
-</video>
-
 > **Please do not use this project for any purpose other than learning, as the author does not guarantee its rigor.**
 
 ## Installation
@@ -122,5 +114,6 @@ s.animate_result_3D(save_path="your_path.mp4")
 
 ## Related Formulas
 
-[1d reference](https://www.google.com/search?q=./readme_1d.md)
-[2d reference](https://www.google.com/search?q=./readme_2d.md)
+[1d reference](./readme_1d.md)
+
+[2d reference](./readme_2d.md)
