@@ -2,6 +2,7 @@ import numpy as np
 from typing import Callable, Tuple
 from wave_simulator.boundary_conditions import *
 from wave_simulator.boundary import Boundaries, Boundary, Area, getDefaultBoundaries
+from wave_simulator.source import Sources, LineSource, getDefaultSources
 from wave_simulator.animation_utils import animate_result_flat, animate_result_3D
 
 
@@ -29,6 +30,7 @@ class TwoDimensionSimulator:
 
         # Boundary conditions
         self.boundaries = getDefaultBoundaries((self.N_x, self.N_y))
+        self.sources = getDefaultSources()
 
         # Initial waveform, default is all 0
         self.initial_wave = lambda x, y: 0.0
@@ -130,6 +132,30 @@ class TwoDimensionSimulator:
 
         self.boundaries += Boundaries(boundaryList, [Area((x1, y1), (x2, y2))])
 
+    def addLineSource(
+            self,
+            start: Tuple[float, float],
+            end: Tuple[float, float],
+            f: Callable[[float], float],
+    ):
+        x1, y1 = start
+        x2, y2 = end
+        x1 = int(x1/self.dx)
+        x2 = int(x2/self.dx)
+        y1 = int(y1/self.dy)
+        y2 = int(y2/self.dy)
+        # 限制到地图范围以内
+        if x1 < 0:
+            x1 = 0
+        if x2 > self.N_x-1:
+            x2 = self.N_x-1
+        if y1 < 0:
+            y1 = 0
+        if y2 > self.N_y-1:
+            y2 = self.N_y-1
+
+        self.sources += Sources([LineSource((x1, y1), (x2, y2), f)])
+
     def simulate(self):
         """
         Starts the simulation
@@ -192,6 +218,8 @@ class TwoDimensionSimulator:
         # Apply boundary conditions
         self.boundaries.apply(u_last - initial_v * self.dt,
                               u_last, u_current, C, C2)
+        # Apply sources
+        self.sources.apply(0.0, u_current)
 
         self.result[:, :, 0] = u_last.copy()
         self.result[:, :, 1] = u_current.copy()
@@ -217,6 +245,8 @@ class TwoDimensionSimulator:
             u_next[1:self.N_x, 1:self.N_y] = u_next_i_j
             # Calculate boundary points
             self.boundaries.apply(u_last, u_current, u_next, C, C2)
+            # Apply sources
+            self.sources.apply(i*self.dt, u_next)
 
             self.result[:, :, i+1] = u_next.copy()
             u_last[:] = u_current.copy()
