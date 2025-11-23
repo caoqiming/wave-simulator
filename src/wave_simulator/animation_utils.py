@@ -4,6 +4,7 @@ import matplotlib.animation as animation
 from matplotlib.animation import FuncAnimation
 from wave_simulator.boundary import Boundaries
 from matplotlib.patches import Rectangle
+from matplotlib import colors  # added for normalization
 
 plt.rcParams['animation.embed_limit'] = 1000.0
 
@@ -144,15 +145,14 @@ def animate_result_3D(result_matrix, X, Y,  cmap='viridis',
 
 def animate_result_flat(result_matrix, X, Y,
                         interval=1,
-                        cmap='viridis',
+                        cmap='plasma',  # changed default to emphasize low values
                         vmin=None, vmax=None,
                         downsample_temporal: int = 1,
                         show: bool = True,
                         save_path: str = None,
                         fps=60,
                         boundaries: Boundaries = None,
-                        normalize: bool = False,  # 新增：是否对每帧单独归一化
-                        symmetric_scale: bool = False,  # 新增：是否使用对称的色标（适合波动数据）
+                        gamma=1
                         ):
     if result_matrix.ndim != 3:
         raise ValueError("result_matrix 必须为三维数组 (Nx, Ny, Nt) 或 (Ny, Nx, Nt)")
@@ -165,28 +165,20 @@ def animate_result_flat(result_matrix, X, Y,
     else:
         frame_indices = list(range(data.shape[2]))
 
-    # 如果需要对称色标且未指定 vmin/vmax，则根据全局数据自动设置
-    if symmetric_scale and vmin is None and vmax is None:
-        abs_max = np.max(np.abs(data))
-        vmin = -abs_max
-        vmax = abs_max
-    
     extent = [float(X.min()), float(X.max()), float(Y.min()), float(Y.max())]
 
-    fig, ax = plt.subplots(figsize=(10, 8))  # 增大图形尺寸
-    
-    # 初始帧数据
-    initial_data = data[:, :, frame_indices[0]]
-    if normalize:
-        # 对初始帧归一化
-        data_min = initial_data.min()
-        data_max = initial_data.max()
-        if data_max > data_min:
-            initial_data = (initial_data - data_min) / (data_max - data_min)
-    
-    im = ax.imshow(initial_data, origin='lower', extent=extent,
-                   cmap=cmap, vmin=vmin, vmax=vmax, aspect='auto',
-                   interpolation='bilinear')  # 使用双线性插值使图像更平滑
+    fig, ax = plt.subplots()
+    im = ax.imshow(
+        data[:, :, frame_indices[0]],
+        origin='lower',
+        extent=extent,
+        cmap=cmap,
+        vmin=vmin,
+        vmax=vmax,
+        aspect='auto',
+        # nonlinear stretch: low values brighter
+        norm=colors.PowerNorm(gamma=gamma)
+    )
     # --- draw internal areas as black rectangles ---
     rectangles = []
     if boundaries is not None:
@@ -208,29 +200,15 @@ def animate_result_flat(result_matrix, X, Y,
             )
             ax.add_patch(rect)
             rectangles.append(rect)
-    fig.colorbar(im, ax=ax)
-    title = ax.set_title(f"t=0 (frame 0/{len(frame_indices)})", fontsize=12)
-    ax.set_xlabel('X', fontsize=11)
-    ax.set_ylabel('Y', fontsize=11)
-    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)  # 添加网格线
+    cbar = fig.colorbar(im, ax=ax)
+    cbar.set_label('U (low values enhanced)', fontsize=10)
+    title = ax.set_title(f"t=0 (frame 0/{len(frame_indices)})")
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
 
     def _update_frame(idx):
         k = frame_indices[idx]
-        frame_data = data[:, :, k]
-        
-        if normalize:
-            # 对当前帧归一化以增强对比度
-            data_min = frame_data.min()
-            data_max = frame_data.max()
-            if data_max > data_min:
-                frame_data = (frame_data - data_min) / (data_max - data_min)
-        
-        im.set_data(frame_data)
-        
-        # 如果没有指定固定的 vmin/vmax 且不归一化，动态调整色标
-        if not normalize and vmin is None and vmax is None and not symmetric_scale:
-            im.set_clim(vmin=frame_data.min(), vmax=frame_data.max())
-        
+        im.set_data(data[:, :, k])
         title.set_text(f"frame {idx+1}/{len(frame_indices)} (t={k})")
         return [im] + rectangles
 

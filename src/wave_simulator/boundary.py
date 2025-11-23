@@ -1,4 +1,4 @@
-from typing import Literal, Tuple, List, Optional
+from typing import Literal, Tuple, List
 from wave_simulator.boundary_conditions import *
 import numpy as np
 from numpy.typing import NDArray
@@ -158,9 +158,9 @@ def getDefaultBoundaries(shape: Tuple[int, int]) -> Boundaries:
     w, h = shape
     return Boundaries(
         [
-            Boundary("up", NeumannBoundary(), (0, h-1), (w-1, h-1)),
-            Boundary("down", NeumannBoundary(), (0, 0), (w-1, 0)),
-            Boundary("left", NeumannBoundary(), (0, 0), (0, h-1)),
-            Boundary("right", NeumannBoundary(), (w-1, 0), (w-1, h-1))
+            Boundary("up", UnlimitedBoundary(), (0, h-1), (w-1, h-1)),
+            Boundary("down", UnlimitedBoundary(), (0, 0), (w-1, 0)),
+            Boundary("left", UnlimitedBoundary(), (0, 0), (0, h-1)),
+            Boundary("right", UnlimitedBoundary(), (w-1, 0), (w-1, h-1))
         ]
     )

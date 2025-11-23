@@ -15,4 +15,4 @@ s.addRectangleBoundaries((2.45, 0), (2.55, 2.4),
 s.addRectangleBoundaries((2.45, 2.6), (2.55, 5),
                          boundaryCondition=UnlimitedBoundary())
 s.simulate()
-s.animate_result_flat()
+s.animate_result_flat(gamma=0.45)
