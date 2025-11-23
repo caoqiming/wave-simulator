@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Callable
 from wave_simulator.boundary_conditions import *
+from wave_simulator.boundary import Boundaries, Boundary, getDefaultBoundaries
 from wave_simulator.animation_utils import animate_result_flat, animate_result_3D
 
 
@@ -27,10 +28,7 @@ class TwoDimensionSimulator:
         self.T = np.linspace(0, self.L_t, self.N_t+1)  # Time range
 
         # Boundary conditions
-        self.left_boundary = NeumannBoundary()
-        self.right_boundary = NeumannBoundary()
-        self.up_boundary = NeumannBoundary()
-        self.down_boundary = NeumannBoundary()
+        self.boundaries = getDefaultBoundaries((self.N_x, self.N_y))
 
         # Initial waveform, default is all 0
         self.initial_wave = lambda x, y: 0.0
@@ -40,6 +38,9 @@ class TwoDimensionSimulator:
         self.wave_speed = lambda x, y: 1.0
 
     def set_simulation_range(self, L_x, L_y, dx, L_t, dt):
+        """
+        Set simulation range. Notice that boundaries will be reset after this.
+        """
         self.L_x = L_x
         self.dx = dx
         self.N_x = int(self.L_x/self.dx)
@@ -55,13 +56,8 @@ class TwoDimensionSimulator:
         self.N_t = int(self.L_t/self.dt)
         self.T = np.linspace(0, self.L_t, self.N_t+1)
 
-    def set_space_range(self, L_x, dx):
-        self.L_x = L_x  # Simulation distance range, from 0 to L_x
-        self.dx = dx  # Minimum distance interval for simulation
-        # Number of segments for the simulation in x
-        self.N_x = int(self.L_x/self.dx)
-        self.X = np.linspace(0, self.L_x, self.N_x+1,
-                             dtype=np.float64)  # Simulation spatial range in x
+        # reset boundaries because map size has changed
+        self.boundaries = getDefaultBoundaries((self.N_x, self.N_y))
 
     def set_time_range(self, L_t, dt):
         # Time
@@ -97,23 +93,8 @@ class TwoDimensionSimulator:
         """
         self.wave_speed = wave_speed
 
-    def set_all_boundary(self, boundary: BoundaryCondition):
-        self.left_boundary = boundary
-        self.right_boundary = boundary
-        self.up_boundary = boundary
-        self.down_boundary = boundary
-
-    def set_left_boundary(self, boundary: BoundaryCondition):
-        self.left_boundary = boundary
-
-    def set_right_boundary(self, boundary: BoundaryCondition):
-        self.right_boundary = boundary
-
-    def set_up_boundary(self, boundary: BoundaryCondition):
-        self.up_boundary = boundary
-
-    def set_down_boundary(self, boundary: BoundaryCondition):
-        self.down_boundary = boundary
+    def set_all_boundary(self, boundaries: Boundaries):
+        self.boundaries = boundaries
 
     def simulate(self):
         """
@@ -175,34 +156,8 @@ class TwoDimensionSimulator:
             initial_v[1:self.N_x, 1:self.N_y] * self.dt +\
             0.5*initial_a[1:self.N_x, 1:self.N_y]*self.dt**2
         # Apply boundary conditions
-        # left i=0
-        u_current[0, :] = self.left_boundary.apply2D(
-            u_last[0, :], u_last[1, :],
-            C=C[0, :],
-            C2=C2[0, :],
-            u_0_j_last=u_last[0, :] - initial_v[0, :] * self.dt,
-        )
-        # right i=N
-        u_current[self.N_x, :] = self.right_boundary.apply2D(
-            u_last[self.N_x, :], u_last[self.N_x-1, :],
-            C=C[self.N_x, :],
-            C2=C2[self.N_x, :],
-            u_0_j_last=u_last[self.N_x, :] - initial_v[self.N_x, :] * self.dt,
-        )
-        # up j=N
-        u_current[:, self.N_y] = self.up_boundary.apply2D(
-            u_last[:, self.N_y], u_last[:, self.N_y-1],
-            C=C[:, self.N_y],
-            C2=C2[:, self.N_y],
-            u_0_j_last=u_last[:, self.N_y] - initial_v[:, self.N_y] * self.dt,
-        )
-        # down j=0
-        u_current[:, 0] = self.down_boundary.apply2D(
-            u_last[:, 0], u_last[:, 1],
-            C=C[:, 0],
-            C2=C2[:, 0],
-            u_0_j_last=u_last[:, 0] - initial_v[:, 0] * self.dt,
-        )
+        self.boundaries.apply(u_last - initial_v * self.dt,
+                              u_last, u_current, C, C2)
 
         self.result[:, :, 0] = u_last.copy()
         self.result[:, :, 1] = u_current.copy()
@@ -227,34 +182,7 @@ class TwoDimensionSimulator:
 
             u_next[1:self.N_x, 1:self.N_y] = u_next_i_j
             # Calculate boundary points
-            # left i=0
-            u_next[0, :] = self.left_boundary.apply2D(
-                u_current[0, :], u_current[1, :],
-                C=C[0, :],
-                C2=C2[0, :],
-                u_0_j_last=u_last[0, :],
-            )
-            # right i=N
-            u_next[self.N_x, :] = self.right_boundary.apply2D(
-                u_current[self.N_x, :], u_current[self.N_x-1, :],
-                C=C[self.N_x, :],
-                C2=C2[self.N_x, :],
-                u_0_j_last=u_last[self.N_x, :],
-            )
-            # up j=N
-            u_next[:, self.N_y] = self.up_boundary.apply2D(
-                u_current[:, self.N_y], u_current[:, self.N_y-1],
-                C=C[:, self.N_y],
-                C2=C2[:, self.N_y],
-                u_0_j_last=u_last[:, self.N_y],
-            )
-            # down j=0
-            u_next[:, 0] = self.down_boundary.apply2D(
-                u_current[:, 0], u_current[:, 1],
-                C=C[:, 0],
-                C2=C2[:, 0],
-                u_0_j_last=u_last[:, 0],
-            )
+            self.boundaries.apply(u_last, u_current, u_next, C, C2)
 
             self.result[:, :, i+1] = u_next.copy()
             u_last[:] = u_current.copy()

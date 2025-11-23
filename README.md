@@ -1,6 +1,6 @@
 # Wave Simulator
 
-[中文](./readme_zh.md)
+[中文](./doc/readme_zh.md)
 
 This project is for wave simulation.
 
@@ -114,6 +114,6 @@ s.animate_result_3D(save_path="your_path.mp4")
 
 ## Related Formulas
 
-[1d reference](./readme_1d.md)
+[1d reference](./doc/readme_1d.md)
 
-[2d reference](./readme_2d.md)
+[2d reference](./doc/readme_2d.md)

@@ -16,6 +16,5 @@ def my_wave_speed(x, y):
 
 s.set_initial_wave(my_initial_wave)
 s.set_wave_speed(my_wave_speed)
-s.set_all_boundary(UnlimitedBoundary())
 s.simulate()
 s.animate_result_flat()
