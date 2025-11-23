@@ -23,7 +23,7 @@ class TwoDimensionSimulator:
                              dtype=np.float64)
 
         # Time
-        self.L_t = 8  # Duration of simulation [s]
+        self.L_t = 16  # Duration of simulation [s]
         self.dt = 0.005  # Time interval
         self.N_t = int(self.L_t/self.dt)  # Number of time steps
         self.T = np.linspace(0, self.L_t, self.N_t+1)  # Time range
