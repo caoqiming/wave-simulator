@@ -1,7 +1,7 @@
 import numpy as np
-from typing import Callable
+from typing import Callable, Tuple
 from wave_simulator.boundary_conditions import *
-from wave_simulator.boundary import Boundaries, Boundary, getDefaultBoundaries
+from wave_simulator.boundary import Boundaries, Boundary, Area, getDefaultBoundaries
 from wave_simulator.animation_utils import animate_result_flat, animate_result_3D
 
 
@@ -59,13 +59,6 @@ class TwoDimensionSimulator:
         # reset boundaries because map size has changed
         self.boundaries = getDefaultBoundaries((self.N_x, self.N_y))
 
-    def set_time_range(self, L_t, dt):
-        # Time
-        self.L_t = L_t  # Duration of simulation [s]
-        self.dt = dt  # Time interval
-        self.N_t = int(self.L_t/self.dt)  # Number of time steps
-        self.T = np.linspace(0, self.L_t, self.N_t+1)  # Time range
-
     def set_initial_wave(
         self,
         initial_wave: Callable[[np.float64, np.float64], np.float64],
@@ -93,8 +86,49 @@ class TwoDimensionSimulator:
         """
         self.wave_speed = wave_speed
 
-    def set_all_boundary(self, boundaries: Boundaries):
-        self.boundaries = boundaries
+    def addRectangleBoundaries(
+            self,
+            start: Tuple[float, float],
+            end: Tuple[float, float],
+            boundaryCondition: BoundaryCondition = NeumannBoundary(),
+    ) -> None:
+        # 将矩形范围的表示从距离转化为索引
+        x1, y1 = start
+        x2, y2 = end
+        x1 = int(x1/self.dx)
+        x2 = int(x2/self.dx)
+        y1 = int(y1/self.dy)
+        y2 = int(y2/self.dy)
+
+        if not (x1 < x2 and y1 < y2):
+            raise ValueError(
+                "internalStart 必须是左下角，internalEnd 必须是右上角 (x1<x2 且 y1<y2)")
+
+        # 限制到地图范围以内
+        if x1 < 0:
+            x1 = 0
+        if x2 > self.N_x-1:
+            x2 = self.N_x-1
+        if y1 < 0:
+            y1 = 0
+        if y2 > self.N_y-1:
+            y2 = self.N_y-1
+
+        boundaryList = []
+        if x1 > 0:
+            boundaryList.append(
+                Boundary("right", boundaryCondition, (x1, y1), (x1, y2)))
+        if y1 > 0:
+            boundaryList.append(
+                Boundary("up", boundaryCondition, (x1, y1), (x2, y1)))
+        if y2 < self.N_y-1:
+            boundaryList.append(
+                Boundary("down", boundaryCondition, (x1, y2), (x2, y2)))
+        if x2 < self.N_x-1:
+            boundaryList.append(
+                Boundary("left", boundaryCondition, (x2, y1), (x2, y2)))
+
+        self.boundaries += Boundaries(boundaryList, [Area((x1, y1), (x2, y2))])
 
     def simulate(self):
         """
@@ -189,7 +223,8 @@ class TwoDimensionSimulator:
             u_current[:] = u_next.copy()
 
     def animate_result_flat(self, **args):
-        animate_result_flat(self.result, X=self.X, Y=self.Y, **args)
+        animate_result_flat(self.result, X=self.X, Y=self.Y,
+                            boundaries=self.boundaries, **args)
 
     def animate_result_3D(self, **args):
         animate_result_3D(self.result, X=self.X, Y=self.Y, **args)

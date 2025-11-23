@@ -1,4 +1,4 @@
-from typing import Literal, Tuple, List
+from typing import Literal, Tuple, List, Optional
 from wave_simulator.boundary_conditions import *
 import numpy as np
 from numpy.typing import NDArray
@@ -99,9 +99,30 @@ class Boundary:
             )
 
 
+class Area:
+    def __init__(
+        self,
+        start: Tuple[int, int],  # 左下角 (x_left, y_bottom)
+        end: Tuple[int, int],    # 右上角 (x_right, y_top)
+    ):
+        x1, y1 = start
+        x2, y2 = end
+        if not (x1 < x2 and y1 < y2):
+            raise ValueError(
+                f"internalStart 必须是左下角，internalEnd 必须是右上角 (x1<x2 且 y1<y2),got {start} {end}")
+        self.start = start
+        self.end = end
+
+
 class Boundaries:
-    def __init__(self, boundaryList: List[Boundary]):
+    def __init__(
+        self,
+        boundaryList: List[Boundary],
+        internalAreas: List[Area] = [],
+
+    ):
         self.boundaries = boundaryList
+        self.internalAreas = internalAreas
 
     def apply(
         self,
@@ -119,7 +140,18 @@ class Boundaries:
                 C,
                 C2
             )
-        # mask the internal area
+
+        # mask the internal areas
+        for area in self.internalAreas:
+            (x1, y1) = area.start
+            (x2, y2) = area.end
+            u_next[x1:x2+1, y1:y2+1] = 0.0
+
+    def __add__(self, other: 'Boundaries') -> 'Boundaries':
+        return Boundaries(
+            boundaryList=self.boundaries + other.boundaries,
+            internalAreas=self.internalAreas + other.internalAreas
+        )
 
 
 def getDefaultBoundaries(shape: Tuple[int, int]) -> Boundaries:
