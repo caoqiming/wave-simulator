@@ -165,6 +165,14 @@ def animate_result_flat(result_matrix, X, Y,
     else:
         frame_indices = list(range(data.shape[2]))
 
+    # 如果未指定 vmin/vmax，则从所有选中的帧计算全局范围
+    if vmin is None or vmax is None:
+        selected_data = data[:, :, frame_indices]
+        if vmin is None:
+            vmin = np.min(selected_data)
+        if vmax is None:
+            vmax = np.max(selected_data)
+
     extent = [float(X.min()), float(X.max()), float(Y.min()), float(Y.max())]
 
     fig, ax = plt.subplots()
@@ -173,11 +181,9 @@ def animate_result_flat(result_matrix, X, Y,
         origin='lower',
         extent=extent,
         cmap=cmap,
-        vmin=vmin,
-        vmax=vmax,
         aspect='auto',
         # nonlinear stretch: low values brighter
-        norm=colors.PowerNorm(gamma=gamma)
+        norm=colors.PowerNorm(gamma=gamma, vmin=vmin, vmax=vmax)
     )
     # --- draw internal areas as black rectangles ---
     rectangles = []
@@ -220,7 +226,7 @@ def animate_result_flat(result_matrix, X, Y,
             print("Saving, this may take a while...")
             ani.save(
                 filename=save_path,  # 文件名
-                writer='ffmpeg',                    # 明确指定使用 ffmpeg 写入器
+                writer='ffmpeg',     # 明确指定使用 ffmpeg 写入器
                 dpi=150,
                 fps=fps,
             )
