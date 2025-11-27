@@ -12,6 +12,9 @@ class Boundary:
             start: Tuple[int, int],
             end: Tuple[int, int],
     ):
+        """
+        boundary 的 上下左右是相对于仿真的区域而言的，比如 left 表示这个边界在仿真区域的左边。
+        """
         allowed = {'up', 'down', 'left', 'right'}
         if type not in allowed:
             raise ValueError(

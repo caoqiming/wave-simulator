@@ -3,7 +3,7 @@ from typing import Callable, Tuple
 from wave_simulator.boundary_conditions import *
 from wave_simulator.boundary import Boundaries, Boundary, Area, getDefaultBoundaries
 from wave_simulator.source import Sources, LineSource, getDefaultSources
-from wave_simulator.animation_utils import animate_result_flat, animate_result_3D
+from wave_simulator.animation_utils import animate_result_flat, animate_result_3D, show_right_boundary_statistics
 
 
 class TwoDimensionSimulator:
@@ -29,7 +29,7 @@ class TwoDimensionSimulator:
         self.T = np.linspace(0, self.L_t, self.N_t+1)  # Time range
 
         # Boundary conditions
-        self.boundaries = getDefaultBoundaries((self.N_x, self.N_y))
+        self.boundaries = getDefaultBoundaries((self.N_x+1, self.N_y+1))
         self.sources = getDefaultSources()
 
         # Initial waveform, default is all 0
@@ -59,7 +59,7 @@ class TwoDimensionSimulator:
         self.T = np.linspace(0, self.L_t, self.N_t+1)
 
         # reset boundaries because map size has changed
-        self.boundaries = getDefaultBoundaries((self.N_x, self.N_y))
+        self.boundaries = getDefaultBoundaries((self.N_x+1, self.N_y+1))
 
     def set_initial_wave(
         self,
@@ -161,6 +161,7 @@ class TwoDimensionSimulator:
         Starts the simulation
         """
         # Used to store the result
+        # 因为 N_x 是线段的数量，而我们计算的都是点，所以个数要加一
         self.result = np.zeros(
             (self.N_x+1, self.N_y+1, self.N_t+1), np.float64)
 
@@ -258,3 +259,7 @@ class TwoDimensionSimulator:
 
     def animate_result_3D(self, **args):
         animate_result_3D(self.result, X=self.X, Y=self.Y, **args)
+
+    def show_right_boundary_statistics(self, **args):
+        show_right_boundary_statistics(
+            self.result, second_dim_coords=self.Y, **args)

@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.typing import NDArray
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.animation import FuncAnimation
@@ -216,10 +217,10 @@ def animate_result_flat(result_matrix, X, Y,
         k = frame_indices[idx]
         im.set_data(data[:, :, k])
         title.set_text(f"frame {idx+1}/{len(frame_indices)} (t={k})")
-        return [im] + rectangles
+        return [im, title] + rectangles
 
     ani = FuncAnimation(fig, _update_frame, frames=len(
-        frame_indices), interval=interval, blit=True)
+        frame_indices), interval=interval, blit=False)
 
     if save_path is not None:
         try:
@@ -243,3 +244,50 @@ def animate_result_flat(result_matrix, X, Y,
         plt.show()
 
     return ani
+
+
+def show_right_boundary_statistics(result_matrix: NDArray[np.float64],
+                                   second_dim_coords: NDArray[np.float64] = None,
+                                   show: bool = True,
+                                   save_path: str = None,
+                                   title: str = None,
+                                   ):
+    if result_matrix.ndim != 3:
+        raise ValueError("result_matrix 必须是三维数组 (Nx, Ny, Nt)")
+    Nx, Ny, Nt = result_matrix.shape
+
+    # 取最右侧列，形状 (Ny, Nt)
+    right_column = result_matrix[Nx - 1, :, :].copy()
+    right_column = np.abs(right_column)
+    # 对时间维度求平均，得到长度为 Ny 的数组
+    mean_vals = right_column.mean(axis=1)
+    # print(mean_vals)
+
+    # 坐标处理
+    if second_dim_coords is None:
+        second_dim_coords = np.arange(Ny)
+
+    # 柱宽估计
+    if len(second_dim_coords) > 1:
+        widths = np.diff(second_dim_coords).min()
+    else:
+        widths = 0.8
+
+    fig, ax = plt.subplots()
+    ax.bar(second_dim_coords, mean_vals, width=widths, align='center')
+    ax.set_xlabel("Distance(m)")
+    ax.set_ylabel("Averaged absolute value of amplitude(m)")
+    if title is None:
+        ax.set_title(
+            "Right boundary time-averaged absolute value of amplitude")
+    else:
+        ax.set_title(title)
+
+    if save_path is not None:
+        fig.savefig(save_path, dpi=150, bbox_inches='tight')
+
+    if show:
+        plt.tight_layout()
+        plt.show()
+
+    return mean_vals, fig, ax
