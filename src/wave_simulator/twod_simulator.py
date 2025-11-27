@@ -253,6 +253,118 @@ class TwoDimensionSimulator:
             u_last[:] = u_current.copy()
             u_current[:] = u_next.copy()
 
+    def simulate_fourth_order(self):
+        """
+        Starts the simulation using fourth order spatial approximation
+        """
+        # Used to store the result
+        self.result = np.zeros(
+            (self.N_x+1, self.N_y+1, self.N_t+1), np.float64)
+
+        # Buffers
+        u_last = np.zeros((self.N_x+1, self.N_y+1), np.float64)
+        u_current = np.zeros((self.N_x+1, self.N_y+1), np.float64)
+        u_next = np.zeros((self.N_x+1, self.N_y+1), np.float64)
+
+        # Initialization
+        c = np.zeros((self.N_x+1, self.N_y+1), np.float64)
+        initial_v = np.zeros((self.N_x+1, self.N_y+1), np.float64)
+        for i in range(0, self.N_x+1):
+            for j in range(0, self.N_y+1):
+                c[i, j] = self.wave_speed(self.X[i], self.Y[j])
+                u_last[i, j] = self.initial_wave(self.X[i], self.Y[j])
+                initial_v[i, j] = self.initial_point_speed(
+                    self.X[i], self.Y[j])
+
+        # Constants
+        c2 = c**2
+        C = c * self.dt / self.dx
+        C2 = C**2
+
+        # CFL check (conservative)
+        if np.any(C > 0.1):
+            raise ValueError(
+                "CFL check failed, you should reduce dt, wave speed or increase dx")
+
+        # Indices valid for 4th-order stencil: need ±2 neighbors
+        i0, i1 = 2, self.N_x-2
+        j0, j1 = 2, self.N_y-2
+        if i1 < i0 or j1 < j0:
+            raise ValueError(
+                "Grid too small for fourth-order scheme; increase N_x/N_y or reduce dx.")
+
+        # Slices for initial acceleration using 4th-order Laplacian
+        u_i_j = u_last[i0:i1+1, j0:j1+1]
+        u_im1_j = u_last[i0-1:i1,   j0:j1+1]
+        u_ip1_j = u_last[i0+1:i1+2, j0:j1+1]
+        u_im2_j = u_last[i0-2:i1-1, j0:j1+1]
+        u_ip2_j = u_last[i0+2:i1+3, j0:j1+1]
+
+        u_i_jm1 = u_last[i0:i1+1, j0-1:j1]
+        u_i_jp1 = u_last[i0:i1+1, j0+1:j1+2]
+        u_i_jm2 = u_last[i0:i1+1, j0-2:j1-1]
+        u_i_jp2 = u_last[i0:i1+1, j0+2:j1+3]
+
+        c2_i_j = c2[i0:i1+1, j0:j1+1]
+
+        lap4 = (
+            (-u_im2_j + 16*u_im1_j - 30*u_i_j + 16*u_ip1_j - u_ip2_j) +
+            (-u_i_jm2 + 16*u_i_jm1 - 30*u_i_j + 16*u_i_jp1 - u_i_jp2)
+        ) / (12.0 * self.dx**2)
+
+        initial_a = np.zeros((self.N_x+1, self.N_y+1), np.float64)
+        initial_a[i0:i1+1, j0:j1+1] = c2_i_j * lap4
+
+        # Bootstrap u at t=dt
+        u_current[i0:i1+1, j0:j1+1] = (
+            u_i_j +
+            initial_v[i0:i1+1, j0:j1+1] * self.dt +
+            0.5 * initial_a[i0:i1+1, j0:j1+1] * self.dt**2
+        )
+
+        # Boundaries and sources at first step
+        self.boundaries.apply(u_last - initial_v * self.dt,
+                              u_last, u_current, C, C2)
+        self.sources.apply(0.0, u_current)
+
+        # Store
+        self.result[:, :, 0] = u_last.copy()
+        self.result[:, :, 1] = u_current.copy()
+
+        # Time stepping
+        for t_idx in range(1, self.N_t):
+            # Slices for current and last
+            u_last_i_j = u_last[i0:i1+1, j0:j1+1]
+            u_i_j = u_current[i0:i1+1, j0:j1+1]
+
+            u_im1_j = u_current[i0-1:i1,   j0:j1+1]
+            u_ip1_j = u_current[i0+1:i1+2, j0:j1+1]
+            u_im2_j = u_current[i0-2:i1-1, j0:j1+1]
+            u_ip2_j = u_current[i0+2:i1+3, j0:j1+1]
+
+            u_i_jm1 = u_current[i0:i1+1, j0-1:j1]
+            u_i_jp1 = u_current[i0:i1+1, j0+1:j1+2]
+            u_i_jm2 = u_current[i0:i1+1, j0-2:j1-1]
+            u_i_jp2 = u_current[i0:i1+1, j0+2:j1+3]
+
+            C2_i_j = C2[i0:i1+1, j0:j1+1]
+
+            lap4 = (
+                (-u_im2_j + 16*u_im1_j - 30*u_i_j + 16*u_ip1_j - u_ip2_j) +
+                (-u_i_jm2 + 16*u_i_jm1 - 30*u_i_j + 16*u_i_jp1 - u_i_jp2)
+            ) / 12.0
+
+            u_next[i0:i1+1, j0:j1+1] = 2*u_i_j - u_last_i_j + C2_i_j * lap4
+
+            # Boundaries and sources
+            self.boundaries.apply(u_last, u_current, u_next, C, C2)
+            self.sources.apply(t_idx * self.dt, u_next)
+
+            # Store and roll
+            self.result[:, :, t_idx+1] = u_next.copy()
+            u_last[:] = u_current.copy()
+            u_current[:] = u_next.copy()
+
     def animate_result_flat(self, **args):
         animate_result_flat(self.result, X=self.X, Y=self.Y,
                             boundaries=self.boundaries, **args)

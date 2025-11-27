@@ -51,3 +51,51 @@ We use the second-order central difference to approximate all second partial der
 $$
 \frac{u_{i, j}^{k+1} - 2 u_{i, j}^{k} + u_{i, j}^{k-1}}{(\Delta t)^2} = c_{i, j}^2 \left[ \frac{u_{i+1, j}^{k} - 2 u_{i, j}^{k} + u_{i-1, j}^{k}}{h^2} + \frac{u_{i, j+1}^{k} - 2 u_{i, j}^{k} + u_{i, j-1}^{k}}{h^2} \right]
 $$
+
+## Fourth-Order Spatial Approximation
+
+To gain higher spatial accuracy, the Laplacian can be approximated with fourth-order central differences while keeping a second-order time update (explicit, good balance of cost and stability).
+
+Fourth-order second derivatives:
+
+- x-direction:
+  $$
+  \frac{\partial^2 u}{\partial x^2}\Big|_{i,j} \approx \frac{-u_{i-2,j} + 16u_{i-1,j} - 30u_{i,j} + 16u_{i+1,j} - u_{i+2,j}}{12\,h^2}
+  $$
+- y-direction:
+  $$
+  \frac{\partial^2 u}{\partial y^2}\Big|_{i,j} \approx \frac{-u_{i,j-2} + 16u_{i,j-1} - 30u_{i,j} + 16u_{i,j+1} - u_{i,j+2}}{12\,h^2}
+  $$
+
+Insert into the wave equation (uniform grid $\Delta x = \Delta y = h$):
+
+$$
+\frac{u_{i,j}^{k+1} - 2u_{i,j}^{k} + u_{i,j}^{k-1}}{(\Delta t)^2}
+= c_{i,j}^2 \left[
+\frac{-u_{i-2,j}^{k} + 16u_{i-1,j}^{k} - 30u_{i,j}^{k} + 16u_{i+1,j}^{k} - u_{i+2,j}^{k}}{12\,h^2} +
+\frac{-u_{i,j-2}^{k} + 16u_{i,j-1}^{k} - 30u_{i,j}^{k} + 16u_{i,j+1}^{k} - u_{i,j+2}^{k}}{12\,h^2}
+\right]
+$$
+
+Explicit update:
+
+$$
+u_{i,j}^{k+1} = 2u_{i,j}^{k} - u_{i,j}^{k-1} +
+\left(\frac{c_{i,j}\Delta t}{h}\right)^2
+\frac{-u_{i-2,j}^{k} +16u_{i-1,j}^{k} -60u_{i,j}^{k} +16u_{i+1,j}^{k} -u_{i+2,j}^{k}
+ -u_{i,j-2}^{k} +16u_{i,j-1}^{k} +16u_{i,j+1}^{k} -u_{i,j+2}^{k}}{12}
+$$
+
+(You may leave the two -30u terms uncombined if clearer.)
+
+Notes:
+
+- Boundary / ghost points: stencil uses offsets ±2, so ghost cells or special boundary closures are required (fixed, free, absorbing).
+- Stability (constant c): CFL constraint tightens; a conservative choice
+  $$
+  \frac{c\,\Delta t}{h} \lesssim \frac{1}{\sqrt{2}}
+  $$
+  Actual limit depends on implementation and boundary treatment; verify numerically.
+- Time order: Keeping time second-order avoids more complex multi-step or Runge–Kutta–Nyström schemes. Higher time order is possible but adds cost and analysis burden.
+- Smooth initial data: To realize fourth-order spatial accuracy the initial displacement and velocity must be sufficiently smooth (bounded higher derivatives).
+- Wider stencil: Increases memory access and boundary handling complexity.
